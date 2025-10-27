@@ -1,12 +1,13 @@
 import express from "express";
-import upload from "../middleware/upload.js";
+import path from "path";
+import upload from "../middleware/upload.js"; // ✅ ensure this file exists at backend/middleware/upload.js
 import authMiddleware from "../middleware/authMiddleware.js";
-import Property from "../models/propertyModel.js";
+import Property from "../models/PropertyModel.js"; // ✅ fix filename capitalization (match your import in controller)
 import User from "../models/user.js";
 
 const router = express.Router();
 
-// Add property route
+// ✅ Add Property Route (unchanged)
 router.post(
   "/add",
   authMiddleware,
@@ -59,11 +60,30 @@ router.post(
   }
 );
 
-// Fetch all properties with owner info
+// ✅ Fetch All Properties with Owner Info + Search & Filter
 router.get("/", async (req, res) => {
   try {
+    const { search, type } = req.query;
+
+    // Build filter object dynamically
+    const filter = {};
+
+    if (type && type !== "all") {
+      filter.type = type;
+    }
+
+    if (search && search.trim() !== "") {
+      filter.$or = [
+        { "location.city": { $regex: search, $options: "i" } },
+        { "location.state": { $regex: search, $options: "i" } },
+        { "location.address": { $regex: search, $options: "i" } },
+        { title: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } },
+      ];
+    }
+
     // Populate owner name and email
-    const properties = await Property.find().populate({
+    const properties = await Property.find(filter).populate({
       path: "owner",
       select: "name email", // only fetch name and email
     });

@@ -1,35 +1,113 @@
-// src/services/propertyService.js
-import API_BASE_URL from "../config/api";
+import API_BASE_URL from "../config/api"; // e.g., http://localhost:5000/api
 
-// ✅ Add a new property
+// ------------------- ADD PROPERTY -------------------
 export const addProperty = async (formData) => {
-  const token = localStorage.getItem("token");
+  try {
+    const token = localStorage.getItem("token");
+    const res = await fetch(`${API_BASE_URL}/properties/add`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
 
-  const res = await fetch(`${API_BASE_URL}/properties/add`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    body: formData,
-  });
+    if (!res.ok) {
+      const error = await res.text();
+      throw new Error(error || "Failed to add property");
+    }
 
-  if (!res.ok) {
-    const error = await res.text();
-    throw new Error(error || "Failed to add property");
+    return await res.json();
+  } catch (err) {
+    console.error("addProperty error:", err);
+    return null; // prevent white screen
   }
-
-  return res.json(); // returns the added property object
 };
 
-// ✅ Fetch all properties (kept your original function name)
-export const fetchProperties = async () => {
-  const res = await fetch(`${API_BASE_URL}/properties`);
-  if (!res.ok) {
-    const error = await res.text();
-    throw new Error(error || "Failed to fetch properties");
+// ------------------- FETCH ALL PROPERTIES -------------------
+export const fetchProperties = async (filters = {}) => {
+  try {
+    const params = new URLSearchParams();
+    if (filters.search) params.append("search", filters.search);
+    if (filters.type && filters.type !== "all") params.append("type", filters.type);
+
+    const res = await fetch(`${API_BASE_URL}/properties?${params.toString()}`);
+
+    if (!res.ok) {
+      const error = await res.text();
+      throw new Error(error || "Failed to fetch properties");
+    }
+
+    const data = await res.json();
+    return Array.isArray(data) ? data : []; // fallback if data is invalid
+  } catch (err) {
+    console.error("fetchProperties error:", err);
+    return []; // prevent white screen
   }
-  return res.json(); // returns array of property objects
 };
 
-// ✅ Added alias for compatibility with Home.tsx
+// Alias for backward compatibility
 export const getProperties = fetchProperties;
+
+// ------------------- FETCH PROPERTY BY ID -------------------
+export const fetchPropertyById = async (id) => {
+  try {
+    const res = await fetch(`${API_BASE_URL}/properties/${id}`);
+    if (!res.ok) {
+      const error = await res.text();
+      throw new Error(error || "Failed to fetch property");
+    }
+    return await res.json();
+  } catch (err) {
+    console.error("fetchPropertyById error:", err);
+    return null; // prevent white screen
+  }
+};
+
+// ------------------- DELETE PROPERTY -------------------
+export const deleteProperty = async (id) => {
+  try {
+    const token = localStorage.getItem("token");
+    const res = await fetch(`${API_BASE_URL}/properties/${id}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!res.ok) {
+      const error = await res.text();
+      throw new Error(error || "Failed to delete property");
+    }
+
+    return await res.json();
+  } catch (err) {
+    console.error("deleteProperty error:", err);
+    return null;
+  }
+};
+
+// ------------------- UPDATE PROPERTY -------------------
+export const updateProperty = async (id, formData) => {
+  try {
+    const token = localStorage.getItem("token");
+    const res = await fetch(`${API_BASE_URL}/properties/${id}`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData, // DO NOT set Content-Type manually for FormData
+    });
+
+    if (!res.ok) {
+      const error = await res.text();
+      throw new Error(error || "Failed to update property");
+    }
+
+    return await res.json();
+  } catch (err) {
+    console.error("updateProperty error:", err);
+    return null;
+  }
+};

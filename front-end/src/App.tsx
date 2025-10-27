@@ -36,6 +36,7 @@ function App() {
             <Route path="/messages" element={<Messages />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
+            
           </Routes>
 
           {/* Auth Modal (Signup/Login UI) */}

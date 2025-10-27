@@ -27,12 +27,9 @@ export const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
 
   const BACKEND_URL = "http://localhost:5000";
 
-  // ✅ Utility function to safely get full image URL
   const getFullImageUrl = (imgPath?: string) => {
     if (!imgPath) return '/placeholder.png';
-    return imgPath.startsWith('/uploads/')
-      ? `${BACKEND_URL}${imgPath}`
-      : imgPath;
+    return imgPath.startsWith('/uploads/') ? `${BACKEND_URL}${imgPath}` : imgPath;
   };
 
   const handleContact = async () => {
@@ -82,8 +79,8 @@ export const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
   const location = property.location || { address: 'N/A', city: 'N/A', state: 'N/A' };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-white rounded-2xl max-w-5xl w-full shadow-2xl my-8">
+    <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 overflow-y-auto bg-black/50">
+      <div className="bg-white rounded-2xl max-w-5xl w-full shadow-2xl my-8 relative">
         {/* Header */}
         <div className="flex justify-between items-center p-6 border-b border-gray-100">
           <h2 className="text-2xl font-bold">{property.title || 'Untitled Property'}</h2>
@@ -137,9 +134,7 @@ export const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
             {/* Location */}
             <div className="flex items-center text-gray-600 mb-4">
               <MapPin className="h-5 w-5 mr-2 text-blue-600" />
-              <span className="text-lg">
-                {location.address}, {location.city}, {location.state}
-              </span>
+              <span className="text-lg">{location.address}, {location.city}, {location.state}</span>
             </div>
 
             {/* Basic Info */}
