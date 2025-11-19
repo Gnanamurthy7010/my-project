@@ -65,6 +65,7 @@ export const fetchPropertyById = async (id) => {
 };
 
 // ------------------- DELETE PROPERTY -------------------
+// ------------------- DELETE PROPERTY -------------------
 export const deleteProperty = async (id) => {
   try {
     const token = localStorage.getItem("token");
@@ -76,14 +77,30 @@ export const deleteProperty = async (id) => {
       },
     });
 
+    // Log details to debug
+    const responseText = await res.text();
+    console.log("DELETE status:", res.status);
+    console.log("DELETE response:", responseText);
+
     if (!res.ok) {
-      const error = await res.text();
-      throw new Error(error || "Failed to delete property");
+      let errorMessage;
+      try {
+        const parsed = JSON.parse(responseText);
+        errorMessage = parsed.message || parsed;
+      } catch {
+        errorMessage = responseText;
+      }
+      throw new Error(errorMessage || "Failed to delete property");
     }
 
-    return await res.json();
+    try {
+      return JSON.parse(responseText);
+    } catch {
+      return responseText;
+    }
   } catch (err) {
-    console.error("deleteProperty error:", err);
+    console.error("deleteProperty error:", err.message);
+    alert(`Delete failed: ${err.message}`); // show actual reason to user
     return null;
   }
 };

@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Home, Mail, Plus, Edit, Trash2 } from "lucide-react";
-import API_BASE_URL, { BACKEND_URL } from "../config/api"; // BACKEND_URL imported
-import { fetchProperties } from "../services/propertyService";
+import API_BASE_URL, { BACKEND_URL } from "../config/api";
+import { fetchProperties, deleteProperty } from "../services/propertyService";
 import { getEnquiries } from "../services/messageService";
 
 export const Dashboard: React.FC = () => {
@@ -12,6 +12,7 @@ export const Dashboard: React.FC = () => {
 
   const [properties, setProperties] = useState([]);
   const [enquiries, setEnquiries] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!user || user.role !== "owner") return;
@@ -26,6 +27,28 @@ export const Dashboard: React.FC = () => {
       .then((res) => setEnquiries(res))
       .catch((err) => console.error("Failed to fetch enquiries:", err));
   }, [user]);
+
+  // ✅ DELETE HANDLER
+  const handleDelete = async (id) => {
+    const confirmDelete = window.confirm("Are you sure you want to delete this property?");
+    if (!confirmDelete) return;
+
+    try {
+      setLoading(true);
+      const result = await deleteProperty(id);
+      if (result) {
+        alert("Property deleted successfully!");
+        setProperties((prev) => prev.filter((p) => p.id !== id));
+      } else {
+        alert("Failed to delete property. Try again.");
+      }
+    } catch (error) {
+      console.error("Delete error:", error);
+      alert("Error deleting property.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (!user || user.role !== "owner") {
     return (
@@ -127,9 +150,12 @@ export const Dashboard: React.FC = () => {
                       className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
                     >
                       <div className="flex items-start space-x-4">
-                        {/* Image updated like PropertyCard */}
                         <img
-                          src={property.images?.[0] ? `${BACKEND_URL}${property.images[0]}` : "/placeholder.png"}
+                          src={
+                            property.images?.[0]
+                              ? `${BACKEND_URL}${property.images[0]}`
+                              : "/placeholder.png"
+                          }
                           alt={property.title}
                           className="w-24 h-24 object-cover rounded-lg"
                         />
@@ -142,13 +168,16 @@ export const Dashboard: React.FC = () => {
                             {property.location?.city}, {property.location?.state}
                           </p>
                           <div className="flex space-x-2 mt-3">
-                            <button className="flex items-center space-x-1 text-blue-600 hover:text-blue-700 text-sm font-medium">
-                              <Edit className="h-4 w-4" />
-                              <span>Edit</span>
-                            </button>
-                            <button className="flex items-center space-x-1 text-red-600 hover:text-red-700 text-sm font-medium">
+                            {/* ❌ Removed Edit functionality */}
+                            <button
+                              onClick={() => handleDelete(property.id)}
+                              disabled={loading}
+                              className={`flex items-center space-x-1 text-red-600 hover:text-red-700 text-sm font-medium ${
+                                loading ? "opacity-50 cursor-not-allowed" : ""
+                              }`}
+                            >
                               <Trash2 className="h-4 w-4" />
-                              <span>Delete</span>
+                              <span>{loading ? "Deleting..." : "Delete"}</span>
                             </button>
                           </div>
                         </div>
